@@ -67,7 +67,7 @@ function App() {
       <h2>{correct ? <span>You have answered {correct} correctly!</span> : <span>Answer your first question!</span>}</h2>
       <input type="number" onInput={checkCorrect} ref={input} autoFocus placeholder='Answer' />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
