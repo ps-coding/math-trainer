@@ -1,12 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
-import './App.css'
+import "./App.css";
+
+import { useEffect, useRef, useState } from "react";
 
 const operations = ["+", "-", "*", "/"] as const;
 type Operation = typeof operations[number];
-type Problem = { firstNum: number, secondNum: number, operation: Operation, answer: number }
+type Problem = {
+  firstNum: number;
+  secondNum: number;
+  operation: Operation;
+  answer: number;
+};
 
 function randomNumBetween(min: number, max: number) {
-  return Math.floor(Math.random() * (max - min + 1) + min)
+  return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
 function getProblem(maxDifficulty: number): Problem {
@@ -36,38 +42,104 @@ function getProblem(maxDifficulty: number): Problem {
   return { firstNum, secondNum, operation, answer };
 }
 
-function App() {
+export default function App() {
   const [correct, setCorrect] = useState(0);
   const [problem, setProblem] = useState(getProblem(correct));
   const { firstNum, secondNum, operation, answer } = problem;
-  const input = useRef();
-  const title = useRef();
+  const input = useRef<HTMLInputElement>(null);
+  const questionRef = useRef<HTMLHeadingElement>(null);
+  const levelRef = useRef<HTMLHeadingElement>(null);
+  const timeRef = useRef<HTMLParagraphElement>(null);
+  const timer = useRef<number>();
+  const [time, setTime] = useState(10);
 
   useEffect(() => {
     setProblem(getProblem(correct));
   }, [correct]);
 
   useEffect(() => {
-    title.current.innerText = `${firstNum} ${operation} ${secondNum}`;
+    if (questionRef.current) {
+      questionRef.current.innerText = `${firstNum} ${operation} ${secondNum}`;
+    }
   }, [problem]);
 
-  function checkCorrect(event: any) {
-    if (event.target.value == answer.toString()) {
-      title.current.innerText = "Correct!";
+  useEffect(() => {
+    setTime(10);
+  }, [correct]);
+
+  useEffect(() => {
+    if (time > 0) {
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => {
+        setTime((time) => time - 1);
+      }, 1000);
+    } else {
+      clearTimeout(timer.current);
+      setCorrect((correct) => {
+        if (correct == 0) {
+          if (questionRef.current) {
+            questionRef.current.innerHTML =
+              "Game Over!" +
+              "<br />(" +
+              firstNum +
+              " " +
+              operation +
+              " " +
+              secondNum +
+              ")";
+          }
+
+          if (input.current) {
+            input.current.value = answer.toString();
+            input.current.disabled = true;
+          }
+
+          if (levelRef.current) {
+            levelRef.current.innerText = "Refresh to play again.";
+          }
+
+          if (timeRef.current) {
+            timeRef.current.innerText = "Time's up!";
+          }
+
+          return 0;
+        }
+
+        return correct - 1;
+      });
+    }
+  }, [time]);
+
+  function checkCorrect(event: React.FormEvent<HTMLInputElement>) {
+    if (event.currentTarget.value == answer.toString()) {
+      if (questionRef.current) {
+        questionRef.current.innerText = "Correct!";
+      }
       setTimeout(() => {
         setCorrect((correct) => correct + 1);
-        input.current.value = "";
+        if (input.current) {
+          input.current.value = "";
+        }
       }, 350);
     }
   }
 
   return (
     <>
-      <h1 ref={title}>{firstNum} {operation} {secondNum}</h1>
-      <h2>{correct ? <span>You have answered {correct} correctly!</span> : <span>Answer your first question!</span>}</h2>
-      <input type="number" onInput={checkCorrect} ref={input} autoFocus placeholder='Answer' />
+      <h1 ref={questionRef}>
+        {firstNum} {operation} {secondNum}
+      </h1>
+      <h2 ref={levelRef}>Level: {correct} </h2>
+      <input
+        type="number"
+        onInput={checkCorrect}
+        ref={input}
+        autoFocus
+        placeholder="Answer"
+      />
+      <p ref={timeRef}>
+        Time Remaining: {time} {time == 1 ? "second" : "seconds"}
+      </p>
     </>
   );
 }
-
-export default App;
