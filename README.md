@@ -10,3 +10,4 @@
 - Clone the repo
 - Execute `npm run dev` in the terminal
 - Open your browser to the localhost address displayed
+- Enjoy!
