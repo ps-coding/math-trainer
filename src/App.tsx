@@ -2,7 +2,7 @@ import "./App.css";
 
 import { useEffect, useRef, useState } from "react";
 
-const operations = ["+", "-", "*", "/"] as const;
+const operations = ["+", "-", "*", "/", "^", "√"] as const;
 type Operation = typeof operations[number];
 type Problem = {
   firstNum: number;
@@ -33,10 +33,18 @@ function getProblem(maxDifficulty: number): Problem {
     answer = randomNumBetween(1, 10 * maxDifficulty);
     secondNum = randomNumBetween(1, 10 * maxDifficulty);
     firstNum = answer * secondNum;
-  } else {
+  } else if (operation == "-") {
     answer = randomNumBetween(1, 10 * maxDifficulty);
     secondNum = randomNumBetween(1, 10 * maxDifficulty);
     firstNum = answer + secondNum;
+  } else if (operation == "^") {
+    firstNum = randomNumBetween(1, 2 * Math.ceil(maxDifficulty / 2));
+    secondNum = randomNumBetween(1, 1 * Math.ceil(maxDifficulty / 2));
+    answer = Math.pow(firstNum, secondNum);
+  } else {
+    answer = randomNumBetween(1, 2 * Math.ceil(maxDifficulty / 2));
+    firstNum = randomNumBetween(1, 1 * Math.ceil(maxDifficulty / 2));
+    secondNum = Math.pow(answer, firstNum);
   }
 
   return { firstNum, secondNum, operation, answer };
@@ -44,7 +52,7 @@ function getProblem(maxDifficulty: number): Problem {
 
 export default function App() {
   const [correct, setCorrect] = useState(0);
-  const [problem, setProblem] = useState(getProblem(correct));
+  const [problem, setProblem] = useState(getProblem(correct) as Problem);
   const { firstNum, secondNum, operation, answer } = problem;
   const input = useRef<HTMLInputElement>(null);
   const questionRef = useRef<HTMLHeadingElement>(null);
@@ -55,15 +63,6 @@ export default function App() {
 
   useEffect(() => {
     setProblem(getProblem(correct));
-  }, [correct]);
-
-  useEffect(() => {
-    if (questionRef.current) {
-      questionRef.current.innerText = `${firstNum} ${operation} ${secondNum}`;
-    }
-  }, [problem]);
-
-  useEffect(() => {
     setTime(10);
   }, [correct]);
 
@@ -80,13 +79,8 @@ export default function App() {
           if (questionRef.current) {
             questionRef.current.innerHTML =
               "Game Over!" +
-              "<br />(" +
-              firstNum +
-              " " +
-              operation +
-              " " +
-              secondNum +
-              ")";
+              "<br />" +
+              `<span class="problem"><span class=${operation == "√" ? "r-index" : ""}>${(operation != "√" || firstNum != 2) ? firstNum : ""}</span><span class=${"operation" + (operation != "√" ? " space" : "")}>${operation}</span><span class=${operation == "√" ? "r-radicand" : ""}>${secondNum}</span>&nbsp;=</span>`;
           }
 
           if (input.current) {
@@ -112,13 +106,18 @@ export default function App() {
 
   function checkCorrect(event: React.FormEvent<HTMLInputElement>) {
     if (event.currentTarget.value == answer.toString()) {
-      if (questionRef.current) {
-        questionRef.current.innerText = "Correct!";
+      if (input.current) {
+        input.current.type = "text";
+        input.current.value = "Correct!";
+        input.current.disabled = true;
       }
       setTimeout(() => {
         setCorrect((correct) => correct + 1);
         if (input.current) {
-          input.current.value = "";
+          input.current.disabled = false;
+          input.current.textContent = "";
+          input.current.type = "number";
+          input.current.focus();
         }
       }, 350);
     }
@@ -127,9 +126,8 @@ export default function App() {
   return (
     <>
       <h1 ref={questionRef}>
-        {firstNum} {operation} {secondNum}
+        <span className="problem"><span className={operation == "√" ? "r-index" : ""}>{(operation != "√" || firstNum != 2) ? firstNum : ""}</span><span className={"operation" + (operation != "√" ? " space" : "")}>{operation}</span><span className={operation == "√" ? "r-radicand" : ""}>{secondNum}</span>&nbsp;=</span>
       </h1>
-      <h2 ref={levelRef}>Level: {correct} </h2>
       <input
         type="number"
         onInput={checkCorrect}
@@ -137,6 +135,7 @@ export default function App() {
         autoFocus
         placeholder="Answer"
       />
+      <h2 ref={levelRef}>Level: {correct + 1}</h2>
       <p ref={timeRef}>
         Time Remaining: {time} {time == 1 ? "second" : "seconds"}
       </p>

@@ -21,3 +21,27 @@ input {
   -moz-appearance: textfield;
 }
 
+.problem {
+  display: flex;
+  display: flex;
+  justify-content: center;
+}
+
+.operation {
+  color: rgb(0, 255, 255);
+}
+
+.r-index {
+  font-size: 15px;
+  align-self: flex-start;
+}
+
+.r-radicand {
+  text-decoration: overline;
+  text-decoration-color: rgb(0, 255, 255);
+}
+
+.space {
+  margin-inline: 10px;
+}
+
