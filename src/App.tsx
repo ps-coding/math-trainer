@@ -39,11 +39,11 @@ function getProblem(maxDifficulty: number): Problem {
     firstNum = answer + secondNum;
   } else if (operation == "^") {
     firstNum = randomNumBetween(1, 2 * Math.ceil(maxDifficulty / 2));
-    secondNum = randomNumBetween(1, 1 * Math.ceil(maxDifficulty / 2));
+    secondNum = randomNumBetween(2, (2 * Math.ceil(maxDifficulty / 2)) + 1);
     answer = Math.pow(firstNum, secondNum);
   } else {
     answer = randomNumBetween(1, 2 * Math.ceil(maxDifficulty / 2));
-    firstNum = randomNumBetween(1, 1 * Math.ceil(maxDifficulty / 2));
+    firstNum = randomNumBetween(2, (2 * Math.ceil(maxDifficulty / 2)) + 1);
     secondNum = Math.pow(answer, firstNum);
   }
 
@@ -52,14 +52,14 @@ function getProblem(maxDifficulty: number): Problem {
 
 export default function App() {
   const [correct, setCorrect] = useState(0);
-  const [problem, setProblem] = useState(getProblem(correct) as Problem);
-  const { firstNum, secondNum, operation, answer } = problem;
+  const [{ firstNum, secondNum, operation, answer }, setProblem] = useState(getProblem(correct));
   const input = useRef<HTMLInputElement>(null);
   const questionRef = useRef<HTMLHeadingElement>(null);
   const levelRef = useRef<HTMLHeadingElement>(null);
   const timeRef = useRef<HTMLParagraphElement>(null);
   const timer = useRef<number>();
   const [time, setTime] = useState(10);
+  const highScore = localStorage.getItem("highScore");
 
   useEffect(() => {
     setProblem(getProblem(correct));
@@ -111,8 +111,19 @@ export default function App() {
         input.current.value = "Correct!";
         input.current.disabled = true;
       }
+
       setTimeout(() => {
-        setCorrect((correct) => correct + 1);
+        setCorrect((correct) => {
+          const item = localStorage.getItem("highScore");
+          const newValue = correct + 1;
+
+          if (item == null || parseInt(item) < newValue) {
+            localStorage.setItem("highScore", newValue.toString());
+          }
+
+          return newValue;
+        });
+
         if (input.current) {
           input.current.disabled = false;
           input.current.textContent = "";
@@ -136,6 +147,7 @@ export default function App() {
         placeholder="Answer"
       />
       <h2 ref={levelRef}>Level: {correct + 1}</h2>
+      <h2>High Score: {highScore ? parseInt(highScore) + 1 : 0}</h2>
       <p ref={timeRef}>
         Time Remaining: {time} {time == 1 ? "second" : "seconds"}
       </p>
